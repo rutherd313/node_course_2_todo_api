@@ -9,6 +9,10 @@ var {User} = require('./models/user')
 
 var app = express();
 
+//Setup the app to use the environment port var that heroku
+//is going to set. Will only run on heroku, not run if local
+const port = process.env.PORT || 3000;
+
 //Getting the body data that got sent from client
 app.use(bodyParser.json());
 
@@ -62,8 +66,8 @@ app.get('/todos/:id', (req, res) => {
 
 
 //Read
-app.listen(3000, () => {
-	console.log('Started on port 3000');
+app.listen(port, () => {
+	console.log(`Started up at port ${port}`);
 });
 
 module.exports = {app};
