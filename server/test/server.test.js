@@ -1,5 +1,6 @@
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectId} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
@@ -7,8 +8,12 @@ const {Todo} = require('./../models/todo');
 //Dummy todos = database will still be predictable, looks same at start
 //but will have some items in it
 const todos = [{
+	//id is auto generated, so force create it
+	//can access id from test case
+	_id: new ObjectId(),
 	text: 'First test todo'
 }, {
+	_id: new ObjectId(),
 	text: 'Second test todo'
 }];
 
@@ -80,5 +85,40 @@ describe('GET /todos', () => {
 				expect(res.body.todos.length).toBe(2);
 			})
 			.end(done);
+	});
+});
+
+describe('GET /todos/:id', () => {
+	//test case to see if valid id is passed, doc comes
+	//back
+	it('should return todo doc', (done) => {
+		request(app)
+		//id come from line 13 
+		//convert obj id into string: toHexString()
+			.get(`/todos/${todos[0]._id.toHexString()}`)
+			.expect(200)
+			//verify body that comes back matches the body
+			//line 14
+			.expect((res) => {
+				//line 55 server.js must match todo prop
+				//to the first todo (line 98) 
+				expect(res.body.todo.text).toBe(todos[0].text)
+			})
+			.end(done);
+	});
+
+	it('should return 404 if todo not found', (done) => {
+		var hexId = new ObjectId().toHexString();
+		request(app)
+			.get(`/todos/${hexId}`)
+			.expect(404)
+			.end(done);
 	})
-})
+
+	it('should return 404 for non-object ids', (done) => {
+		request(app)
+			.get('/todos/123abc')
+			.expect(404)
+			.end(done);
+	});
+});
