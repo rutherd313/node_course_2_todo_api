@@ -8,6 +8,7 @@ const {Todo} = require('./../models/todo');
 
 //Dummy todos = database will still be predictable, looks same at start
 //but will have some items in it
+//SEED DATA
 const todos = [{
 	//id is auto generated, so force create it
 	//can access id from test case
@@ -15,7 +16,9 @@ const todos = [{
 	text: 'First test todo'
 }, {
 	_id: new ObjectId(),
-	text: 'Second test todo'
+	text: 'Second test todo',
+	completed: true,
+	completedAt: 333
 }];
 
 //assumes expect(todos.length).toBe(1) starts at 0, so to correct
@@ -154,10 +157,57 @@ describe('DELETE /todos/:id', () => {
 			.end(done);
 	});
 
-	it('should return 404 if object id is invali', (done) => {
+	it('should return 404 if object id is invalid', (done) => {
 		request(app)
 			.delete('/todos/123abc')
 			.expect(404)
 			.end(done);
+	});
+});
+
+describe('PATCH /todos/:id', () => {
+	it('should update the todo', (done) => {
+		var first_id = todos[0]._id.toHexString();
+		//update text, set it to watever & set completed = T
+		var text = 'This should be the new text';
+		request(app)
+			.patch(`/todos/${first_id}`)
+			//what is changed
+			.send({
+				completed: true,
+				text
+			})
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.todo.text).toBe(text);
+				//assertions bout completed property
+				expect(res.body.todo.completed).toBe(true);
+				//asserion bout completedAt, must be a num
+				expect(res.body.todo.completedAt).toBeGreaterThan(0);
+			})
+			.end(done)
+
+	});
+
+	it('should clear completedAt when todo is not completed', (done) => {
+		//grab id of second todo item
+		var second_id = todos[1]._id.toHexString();
+		//update text, set completed to false	
+		var text = 'This should be the new text!!'
+		request(app)
+			.patch(`/todos/${second_id}`)
+			.send({
+				completed: false,
+				text
+			})
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.todo.text).toBe(text);
+				//assertions bout completed property
+				expect(res.body.todo.completed).toBe(false);
+				//asserion bout completedAt, must be a num
+				expect(res.body.todo.completedAt).toBeNull();
+			})
+			.end(done)
 	});
 });
