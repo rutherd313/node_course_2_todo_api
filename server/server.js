@@ -1,18 +1,21 @@
 //server.js is responsible for routes
-const _ = require('lodash')
+
+require('./config/config');
+
+const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb')
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
-var {User} = require('./models/user')
+var {User} = require('./models/user');
 
 var app = express();
 
 //Setup the app to use the environment port var that heroku
 //is going to set. Will only run on heroku, not run if local
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 //Getting the body data that got sent from client
 app.use(bodyParser.json());

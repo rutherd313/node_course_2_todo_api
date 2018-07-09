@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 //makes sure heroku app connects to actual database
 //process.env.MONGODB_URI from creating heroku sandbox
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/TodoApp');
+mongoose.connect(process.env.MONGODB_URI);
 //---DataBase Configuration
 
 module.exports = {mongoose};
