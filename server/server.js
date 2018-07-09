@@ -1,8 +1,9 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-
 //server.js is responsible for routes
+const _ = require('lodash')
+const express = require('express');
+const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb')
+
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user')
@@ -80,6 +81,41 @@ app.delete('/todos/:id', (req, res) => {
 	});
 });
 
+//HTTP patch method = used to update a resource
+app.patch('/todos/:id', (req, res) => {
+	var id = req.params.id;
+	//where updates used by lodash will be stored
+	//only pull off properties that users can update=_.pick()
+	//2nd arg = arrays that want to pull off if they exist
+	var body = _.pick(req.body, ['text', 'completed']);
+
+	if (!ObjectID.isValid(id)) {
+		return res.status(404).send();
+	}
+
+	//checking the completed value and using that value to set
+	//completedAt
+	if(_.isBoolean(body.completed) && body.completed){
+		//If boolean and True
+		body.completedAt = new Date().getTime();
+	} else {
+		//Not boolean and not True
+		body.completed = false;
+		body.completedAt = null;
+	}
+
+	//Making a query to update the database
+	//body from line 90
+	Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+		if(!todo) {
+			return res.status(404).send();
+		}
+
+		res.send({todo});
+	}).catch((e) => {
+		res.status(400).send();
+	})
+});
 
 //Read
 app.listen(port, () => {
