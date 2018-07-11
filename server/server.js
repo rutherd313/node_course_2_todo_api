@@ -120,6 +120,34 @@ app.patch('/todos/:id', (req, res) => {
 	})
 });
 
+//Validate email
+//POST /users, use _.pick
+app.post('/users', (req, res) => {
+	var body = _.pick(req.body, ['email', 'password']);
+	var user = new User(body);
+
+	//Auth tokens
+	//Model methods: Capital letter
+	//Does not require individual document, due to being custom
+	// User.findByToken()
+
+	//Instance methods: lowercase letter
+	//resp for adding a token onto the individual user document,
+	//saving it and returning the token, so can be sent back to user
+	//user.generateAuthToken
+
+	user.save().then(() => {
+		//from user.js, line 37
+		return user.generateAuthToken();
+	}).then((token) => {
+		//when prefixing header as 'x-', a custom header is created
+		res.header('x-auth').send(user);
+	}).catch((e) => {
+		res.status(400).send(e);
+	})
+});
+
+
 //Read
 app.listen(port, () => {
 	console.log(`Started up at port ${port}`);
