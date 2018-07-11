@@ -10,6 +10,7 @@ const {ObjectID} = require('mongodb')
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
+var {authenticate} = require('./middleware/authenticate');
 
 var app = express();
 
@@ -135,18 +136,38 @@ app.post('/users', (req, res) => {
 	//resp for adding a token onto the individual user document,
 	//saving it and returning the token, so can be sent back to user
 	//user.generateAuthToken
-
 	user.save().then(() => {
 		//from user.js, line 37
 		return user.generateAuthToken();
 	}).then((token) => {
 		//when prefixing header as 'x-', a custom header is created
-		res.header('x-auth').send(user);
+		res.header('x-auth', token).send(user);
 	}).catch((e) => {
 		res.status(400).send(e);
 	})
 });
 
+
+//Creating private routes
+//This route will require authentication, which needs valid x-auth token
+//It will find associated user and send user back
+app.get('/users/me', authenticate, (req, res) => {
+	/*After middleware mods made, only res.send(line 185) is needed
+	//req.header gets value, only key is needed
+	var token = req.header('x-auth');
+
+	//model method
+	User.findByToken(token).then((user) => {
+		//if this code runs, so will catch block
+		if (!user) {
+			return Promise.reject();
+		}
+		res.send(user);
+	}).catch((e) => {
+		res.status(401).send();
+	});*/
+	res.send(req.user);
+});
 
 //Read
 app.listen(port, () => {

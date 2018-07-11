@@ -48,6 +48,7 @@ UserSchema.methods.toJSON = function(){
 //Arrow func does not bind .this, so func expression is used
 //instance method(generateAuthTOken) have access to individual docs
 UserSchema.methods.generateAuthToken = function(){
+  //Instance methods gets called with individual doc, (user)
   var user = this;
   var access = 'auth';
   var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString();
@@ -60,6 +61,34 @@ UserSchema.methods.generateAuthToken = function(){
     return token;
   }).then((token))
 };
+
+//Everything added turns into a model method as opposed to an instance
+UserSchema.statics.findByToken = function(token){
+  //model methods (User) gets called with 'this' binding
+  var User = this;
+  //stores from line 17, hashing.js
+  var decoded;
+
+  try {
+    decoded = jwt.verify(token, 'abc123');
+  } catch (e) {
+    //if this code runs, anything below will not
+    /*return new Promise((resolve, reject) => {
+      reject();
+    });*/
+    //simplified version from ^. Inside reject(), value will be used
+    //to line 162 in server.js
+    return Promise.reject();
+  }
+  //Success case
+  return User.findOne({
+    //finding values that match tokens array
+    '_id': decoded._id,
+    //to query a nested doc, this is the format. from line 24
+    'tokens.token': token,
+    'tokens.access': 'auth'
+  });
+}
 
 var User = mongoose.model('User', UserSchema);
 
