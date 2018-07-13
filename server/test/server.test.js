@@ -5,35 +5,24 @@ const {ObjectId} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed'); 
 
-//Dummy todos = database will still be predictable, looks same at start
-//but will have some items in it
-//SEED DATA
-const todos = [{
-	//id is auto generated, so force create it
-	//can access id from test case
-	_id: new ObjectId(),
-	text: 'First test todo'
-}, {
-	_id: new ObjectId(),
-	text: 'Second test todo',
-	completed: true,
-	completedAt: 333
-}];
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 //assumes expect(todos.length).toBe(1) starts at 0, so to correct
 //code runs before every test case, in this case, make sure database
 //is empty before each request
-beforeEach((done) => {
+/*beforeEach((done) => {
 	//remove wipes out all of todos
 	Todo.remove({}).then(() => {
 		return Todo.insertMany(todos);
 	}).then(() => done());
-	/*old syntax
-	Todo.remove({}).then(() => {
-		done();
-	})*/
-});
+	// old syntax
+	// Todo.remove({}).then(() => {
+	// 	done();
+	// })
+});*/
 
 describe('POST /todos', () => {
 	//async test, therefore (done)
@@ -211,3 +200,25 @@ describe('PATCH /todos/:id', () => {
 			.end(done)
 	});
 });
+
+
+//Route that returns aeach authenticated user
+describe('GET /users/me', () => {
+	it('should return user if authenticated', (done) => {
+		request(app)
+			.get('/users/me')
+			//setting header in supertest
+			.set('x-auth', users[0].tokens[0].token)
+			//assertions
+			.expect(200)
+			.expect((res) => {
+				expect(res.body._id).toBe(users[0]._id.toHexString());
+				expect(res.body.email).toBe(users[0].email);
+			})
+			.end(done);
+	});
+
+	it('should return 401 if not authenticated', (done) => {
+
+	});
+})
