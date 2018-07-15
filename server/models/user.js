@@ -91,6 +91,29 @@ UserSchema.statics.findByToken = function(token){
   });
 }
 
+UserSchema.statics.findByCredentials = function(email, password) {
+  //find user where email is equal to the one passed in
+  var user = this;
+
+  return User.findOne({email}).then((user) => {
+    if (!user) {
+      return Promise.reject();
+    }
+
+    return new Promise((resolve, reject) => {
+      //Use brypt.compare
+      bcrypt.compare(password, user.password, (err, res) => {
+        if (res) {
+          resolve(user);
+        } else {
+          //returns 400
+          reject();
+        }
+      });
+    });
+  });
+};
+
 //Runs before 'save' event
 UserSchema.pre('save', function(next) {
   var user = this;
