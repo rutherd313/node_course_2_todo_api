@@ -23,9 +23,11 @@ app.use(bodyParser.json());
 
 //CreateReadUpdateDelete(CRUD)
 //Create
-app.post('/todos', (req, res) => {
+//authenticate = access to user and token used 
+app.post('/todos', authenticate, (req, res) => {
 	var todo = new Todo({
-		text: req.body.text
+		text: req.body.text,
+		_creator: req.user._id
 	});
 
 	todo.save().then((doc) => {
@@ -37,8 +39,11 @@ app.post('/todos', (req, res) => {
 
 //get('/todos') route 
 //returning all of todos
-app.get('/todos', (req, res) => {
-	Todo.find().then((todos) => {
+app.get('/todos', authenticate, (req, res) => {
+	Todo.find({
+		//only returns user logged that was created
+		_creator: req.user._id
+	}).then((todos) => {
 		res.send({todos})
 	}, (e) => {
 		res.status(400).send(e);
@@ -48,7 +53,7 @@ app.get('/todos', (req, res) => {
 //Call Get todos with specific id
 //url params = :name, this created id var. It will be on the
 //req obj, and will be able to access that variable
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
 	var id = req.params.id
 //req.params is an obj with key/value pairs where key is
 //the url param(id) & val is on what is placed on id
@@ -56,7 +61,10 @@ app.get('/todos/:id', (req, res) => {
 		return res.status(404).send();
 	}
 	//Quering database
-	Todo.findById(id).then((todo) => {
+	Todo.findOne({
+		_id: id,
+		_creator: req.user._id
+	}).then((todo) => {
 		if(!todo) {
 			return res.status(404).send();
 		}
@@ -68,14 +76,17 @@ app.get('/todos/:id', (req, res) => {
 });
 	
 //Route that deletes a todo
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
 	var id = req.params.id;
 	//validate the id
 	if (!ObjectID.isValid(id)) {
 		return res.status(404).send();
 	}
 	//remove todo by id
-	Todo.findByIdAndRemove(id).then((todo) => {
+	Todo.findOneAndRemove({
+		_id: id,
+		_creator: req.user._id
+	}).then((todo) => {
 		if (!todo) {
 			return res.status(404).send();
 		}
@@ -86,7 +97,7 @@ app.delete('/todos/:id', (req, res) => {
 });
 
 //HTTP patch method = used to update a resource
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
 	var id = req.params.id;
 	//where updates used by lodash will be stored
 	//only pull off properties that users can update=_.pick()
@@ -110,14 +121,14 @@ app.patch('/todos/:id', (req, res) => {
 
 	//Making a query to update the database
 	//body from line 90
-	Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
-		if(!todo) {
+	Todo.findOneAndUpdate({_id: id, _creator: req.user._id}, {$set: body}, {new: true}).then((todo) => {
+		if (!todo) {
 			return res.status(404).send();
 		}
 
 		res.send({todo});
 	}).catch((e) => {
-		res.status(400).send();
+		res.status(404).send()
 	})
 });
 
