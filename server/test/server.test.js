@@ -2,6 +2,7 @@ const _ = require('lodash')
 const expect = require('expect');
 const request = require('supertest');
 const {ObjectId} = require('mongodb');
+const {User} = require('./../models/user');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
@@ -201,7 +202,7 @@ describe('PATCH /todos/:id', () => {
 	});
 });
 
-
+//Test cases
 //Route that returns aeach authenticated user
 describe('GET /users/me', () => {
 	it('should return user if authenticated', (done) => {
@@ -219,6 +220,84 @@ describe('GET /users/me', () => {
 	});
 
 	it('should return 401 if not authenticated', (done) => {
-
+		request(app)
+			.get('/users/me')
+			.expect(401)
+			.expect((res) => {
+				expect(res.body).toEqual({});
+			})
+			.end(done);
 	});
-})
+});
+
+//Test cases for sign up route
+describe('POST /users', () => {
+	it('should create a user', (done) => {
+		var email = 'example@example.com';
+		var password = 'randompass';
+
+		request(app)
+			.post('/users')
+			.send({email, password})
+			.expect(200)
+			.expect((res) => {
+				expect(res.headers['x-auth']).toBeTruthy();
+				expect(res.body._id).toBeTruthy();
+				expect(res.body.email).toBe(email);
+			})
+			//custom end
+			.end((err) => {
+				if(err) {
+					return done(err);
+				}
+			User.findOne({email}).then((user) => {
+				expect(user).toBeTruthy();
+				expect(user.password).not.toBe(password);
+				done();
+			})
+		})
+	});
+
+	it('should return validation errors if request invalid', (done) => {
+		request(app)
+			.post('/users')
+			.send({
+				email: 'and',
+				password: '123'
+			})
+			.expect(400)
+			.end(done)
+	});
+
+	it('should not create user if email is already in use', (done) => {
+		request(app)
+			.post('/users')
+			.send({
+				email: users[0].email,
+				password: 'password123!'
+			})
+			.expect(400)
+			.end(done);
+	})
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
