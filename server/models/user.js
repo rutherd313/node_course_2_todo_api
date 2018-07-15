@@ -63,6 +63,18 @@ UserSchema.methods.generateAuthToken = function(){
   }).then((token))
 };
 
+//Defines app.delete in server.js
+UserSchema.methods.removeToken = function(token){
+  //$pull removes items from array that match certain criteria
+  var user = this;
+
+  return user.update({
+    $pull: {
+      tokens: {token}
+    }
+  });
+};
+
 //Everything added turns into a model method as opposed to an instance
 UserSchema.statics.findByToken = function(token){
   //model methods (User) gets called with 'this' binding

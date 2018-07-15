@@ -182,9 +182,20 @@ app.post('/users/login', (req, res) => {
 	});
 });
 
+//Need to authenticate middleware
+app.delete('/users/me/token', authenticate, (req, res) => {
+	//returns a promise, respond to user once token deleted
+	req.user.removeToken(req.token).then(() => {
+		res.status(200).send();
+	}, () => {
+		res.status(400).send();
+	})
+});
+
 //Read
 app.listen(port, () => {
 	console.log(`Started up at port ${port}`);
 });
 
 module.exports = {app};
+
