@@ -60,7 +60,7 @@ UserSchema.methods.generateAuthToken = function(){
   //in order to allow server.js to chain onto promise
   return user.save().then(() => {
     return token;
-  }).then((token))
+  });//.then((token))
 };
 
 //Defines app.delete in server.js

@@ -47,7 +47,7 @@ app.get('/todos', authenticate, (req, res) => {
 		res.send({todos})
 	}, (e) => {
 		res.status(400).send(e);
-	})
+	});
 });
 
 //Call Get todos with specific id

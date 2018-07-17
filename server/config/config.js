@@ -10,7 +10,7 @@ if (env === 'development' || env === 'test') {
 	var config = require('./config.json');
 	//sets up current environments
 	//when using var to access a property, use bracket notation
-	var envConfig = config[env]
+	var envConfig = config[env];
 
 	//takes an obj, takes all the keys and returns them as arrays
 	//forEach loops thru each key
