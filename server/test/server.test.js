@@ -219,6 +219,7 @@ describe('PATCH /todos/:id', () => {
 				expect(res.body.todo.completed).toBe(true);
 				//asserion bout completedAt, must be a num
 				expect(res.body.todo.completedAt).toBeGreaterThan(0);
+				/*expect(typeof res.body.todo.completedAt).toBe('number');*/
 			})
 			.end(done)
 	});
@@ -361,7 +362,7 @@ describe('POST /users/login', () => {
 					return done(err);
 				}
 			User.findById(users[1]._id).then((user) => {
-				expect(user.tokens[1]).toMatchObject({
+				expect(user.toObject().tokens[1]).toMatchObject({
 					access: 'auth',
 					token: res.headers['x-auth']
 				});
